@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Thanksgiving Family Feud · Beta Club</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+:root{--gold:#ffc53d;--red:#dc2626;--ink:#fff7ed;--navy:#0b1f5c;--deep:#06102e}
+html,body{margin:0;min-height:100%}
+body{font-family:Inter,system-ui,sans-serif;color:var(--ink);background:radial-gradient(ellipse at 50% -10%,#9a3412 0%,#431407 45%,#1c0a03 100%) fixed;min-height:100vh}
+.A{font-family:Anton,Impact,"Arial Narrow",sans-serif;letter-spacing:.02em}
+
+/* ---------- Audience display ---------- */
+.display{display:flex;flex-direction:column;align-items:center;padding:2vh 3vw;min-height:100vh;gap:1.8vh}
+.scorebar{display:grid;grid-template-columns:1fr auto 1fr;gap:2vw;width:100%;max-width:1400px}
+.team{background:linear-gradient(#1e3a8a,var(--navy));border:4px solid var(--gold);border-radius:18px;padding:1vh 1.5vw;text-align:center;transition:transform .3s,box-shadow .3s}
+.team.active{box-shadow:0 0 0 4px #fff,0 0 40px var(--gold);transform:scale(1.03)}
+.team .nm{font-family:Anton,Impact,sans-serif;font-size:clamp(18px,2.6vw,40px);text-transform:uppercase;line-height:1.1}
+.team .sc{font-family:Anton,Impact,sans-serif;font-size:clamp(36px,6vw,96px);color:var(--gold);line-height:1}
+.bankbox{min-width:clamp(120px,14vw,220px);background:radial-gradient(circle,#7c2d12,#3b0f04);border:4px solid var(--gold);border-radius:18px;text-align:center;padding:1vh 1vw;display:flex;flex-direction:column;justify-content:center}
+.bankbox .lbl{font-weight:800;text-transform:uppercase;letter-spacing:.12em;font-size:clamp(11px,1.1vw,18px);opacity:.85}
+.bankbox .bk{font-family:Anton,Impact,sans-serif;font-size:clamp(36px,5.5vw,88px);color:#fff;line-height:1}
+.roundtag{font-family:Anton,Impact,sans-serif;font-size:clamp(16px,1.8vw,30px);text-transform:uppercase;letter-spacing:.1em;color:var(--gold)}
+.dbl{background:var(--red);color:#fff;padding:.1em .5em;border-radius:6px;margin-left:.4em;animation:pulse .7s infinite alternate}
+.prompt{font-family:Anton,Impact,sans-serif;font-size:clamp(22px,3.4vw,54px);text-align:center;max-width:1400px;line-height:1.15;text-shadow:0 3px 0 #000}
+.board{background:linear-gradient(#ffd666,#d48806);padding:clamp(8px,1vw,14px);border-radius:24px;width:100%;max-width:1400px;box-shadow:0 20px 60px #000a}
+.board-inner{background:var(--deep);border-radius:14px;padding:clamp(8px,1vw,14px);display:grid;grid-template-columns:1fr 1fr;grid-auto-flow:column;grid-template-rows:repeat(var(--rows),auto);gap:clamp(8px,1vw,12px)}
+.board.sd{max-width:800px}.board.sd .board-inner{grid-template-columns:1fr}
+.tile{perspective:800px;height:clamp(56px,10vh,110px)}
+.tile .face{height:100%;border-radius:10px;display:flex;align-items:center;border:3px solid #93c5fd55;overflow:hidden}
+.tile.hidden .face{background:linear-gradient(#2563eb,#1e3a8a);justify-content:center}
+.num{font-family:Anton,Impact,sans-serif;font-size:clamp(22px,3vw,48px);background:radial-gradient(#1e3a8a,var(--navy));border:3px solid #fff;border-radius:50%;width:2.3em;height:1.5em;display:grid;place-items:center}
+.tile.shown .face{background:linear-gradient(#fff7e0,#ffd666);color:#1c0a03;justify-content:space-between;padding-left:1.2vw;border-color:#fff}
+.tile.shown.dim .face{filter:saturate(.5) brightness(.8)}
+.ans{font-family:Anton,Impact,sans-serif;font-size:clamp(16px,2.4vw,40px);text-transform:uppercase;line-height:1.05;padding-right:.5em}
+.pts{font-family:Anton,Impact,sans-serif;font-size:clamp(22px,3vw,48px);background:var(--navy);color:var(--gold);height:100%;display:grid;place-items:center;min-width:3em;flex-shrink:0}
+.tile.empty .face{background:#0b1f5c66;border-color:transparent}
+.tile.flip .face,.fmcell.flip{animation:flip .6s ease}
+@keyframes flip{0%{transform:rotateX(90deg)}100%{transform:rotateX(0)}}
+.lower{display:flex;align-items:center;justify-content:center;gap:2vw;flex-wrap:wrap;width:100%;max-width:1400px}
+.strikes{display:flex;gap:.8vw}
+.strike{font-family:Anton,Impact,sans-serif;font-size:clamp(28px,3.6vw,60px);color:#ffffff22;border:4px solid #ffffff22;width:1.5em;height:1.5em;display:grid;place-items:center;border-radius:12px}
+.strike.on{color:var(--red);border-color:var(--red);background:#0008;text-shadow:0 0 20px var(--red)}
+.banner{font-family:Anton,Impact,sans-serif;font-size:clamp(18px,2.4vw,40px);background:#000a;border:3px solid var(--gold);border-radius:999px;padding:.35em 1.2em;text-align:center}
+.timer{font-family:Anton,Impact,sans-serif;font-size:clamp(40px,6vw,110px);color:var(--gold);min-width:1.5em;text-align:center;line-height:1}
+.timer.low{color:var(--red);animation:pulse .5s infinite alternate}
+.timer.small{font-size:42px;margin-top:10px}
+@keyframes pulse{to{opacity:.55}}
+.splash{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:3vh}
+.kicker{font-weight:800;text-transform:uppercase;letter-spacing:.3em;color:var(--gold);font-size:clamp(14px,1.6vw,26px)}
+.logo{font-family:Anton,Impact,sans-serif;font-size:clamp(48px,10vw,170px);line-height:.92;color:var(--gold);text-shadow:0 6px 0 #7c2d12,0 14px 30px #000}
+.logo.sm{font-size:clamp(40px,7vw,120px)}
+.vs{display:flex;gap:2vw;align-items:center;font-family:Anton,Impact,sans-serif;font-size:clamp(24px,4vw,64px);text-transform:uppercase}
+.vs em{color:var(--gold);font-style:normal;font-size:.7em}
+.subline{font-size:clamp(18px,2.2vw,36px);font-weight:800}
+.confetti span{position:fixed;top:-10vh;animation:fall linear infinite;pointer-events:none;z-index:1}
+@keyframes fall{to{transform:translateY(120vh) rotate(600deg)}}
+.fm{width:100%;max-width:1200px;display:flex;flex-direction:column;align-items:center;gap:1.2vh}
+.fmhead{display:flex;align-items:center;gap:3vw}
+.fmtitle{font-family:Anton,Impact,sans-serif;font-size:clamp(30px,8vh,90px);line-height:1;color:var(--gold);text-shadow:0 6px 0 #7c2d12}
+.fmgrid{display:grid;grid-template-columns:1fr 1fr;gap:1.5vw;width:100%;background:linear-gradient(#ffd666,#d48806);padding:12px;border-radius:20px}
+.fmcol{display:flex;flex-direction:column;gap:8px;background:var(--deep);padding:12px;border-radius:12px}
+.fmcol h4{margin:0;text-align:center;font-family:Anton,Impact,sans-serif;font-size:clamp(16px,1.6vw,26px);color:var(--gold);letter-spacing:.08em}
+.fmcell{display:flex;justify-content:space-between;align-items:center;height:clamp(38px,6.6vh,80px);background:linear-gradient(#2563eb,#1e3a8a);border-radius:8px;padding-left:1vw;font-family:Anton,Impact,sans-serif;font-size:clamp(16px,2.4vw,40px);text-transform:uppercase;overflow:hidden}
+.fmcell .fp{background:var(--navy);color:var(--gold);min-width:2.8em;height:100%;display:grid;place-items:center;flex-shrink:0}
+.fmtotal{font-family:Anton,Impact,sans-serif;font-size:clamp(28px,7vh,72px);line-height:1}
+.fmtotal b{color:var(--gold)}.fmtotal small{opacity:.6;font-size:.55em}
+#xlayer{position:fixed;inset:0;display:none;justify-content:center;align-items:center;gap:3vw;pointer-events:none;z-index:50;background:#0007}
+#xlayer.on{display:flex}
+#xlayer span{font-family:Anton,Impact,sans-serif;font-size:min(42vh,28vw);color:var(--red);-webkit-text-stroke:6px #fff;line-height:1;animation:pop .25s}
+#xlayer .dup{font-family:Anton,Impact,sans-serif;font-size:min(16vh,12vw);color:#fff;background:var(--red);padding:.2em .6em;border-radius:24px;text-align:center;line-height:1;animation:pop .25s}
+@keyframes pop{from{transform:scale(2);opacity:0}}
+.dtools{position:fixed;right:12px;bottom:12px;display:flex;gap:8px;opacity:.2;transition:opacity .3s;z-index:20}
+.dtools:hover{opacity:1}
+.toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#000c;padding:8px 16px;border-radius:999px;font-size:14px;z-index:20}
+
+/* ---------- Host controls ---------- */
+button{font:inherit;font-weight:800;border:0;border-radius:10px;padding:.6em 1em;background:var(--gold);color:#1c0a03;cursor:pointer}
+button:hover{filter:brightness(1.1)}
+button:disabled{opacity:.4;cursor:default;filter:none}
+button.red{background:var(--red);color:#fff}
+button.blue{background:#2563eb;color:#fff}
+button.ghost{background:#ffffff1f;color:#fff}
+button.big{font-size:1.15em;padding:.8em 1.2em}
+.host{max-width:1300px;margin:0 auto;padding:16px;font-size:16px}
+.hbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:#000a;border:2px solid var(--gold);border-radius:14px;padding:10px 14px}
+.hbar b{font-size:20px}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;align-items:center}
+.btnrow.c{justify-content:center}
+.btnrow.between{justify-content:space-between}
+.panel{background:#0b1f5cdd;border:2px solid #ffffff22;border-radius:14px;padding:14px 16px;margin-top:14px}
+.panel h2{margin:.2em 0 .5em;font-size:22px}
+.cols{display:grid;grid-template-columns:1.2fr 1fr;gap:14px}
+.cols>.panel{margin-top:14px}
+@media(max-width:860px){.cols{grid-template-columns:1fr}}
+.host .mini{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;margin-top:14px}
+.host .team .nm{font-size:22px}.host .team .sc{font-size:52px}
+.host .bankbox .bk{font-size:46px}
+.hstrk{font-family:Anton,Impact,sans-serif;font-size:22px;letter-spacing:.15em;color:var(--red)}
+.hstrk i{color:#ffffff33;font-style:normal}
+.hprompt{font-family:Anton,Impact,sans-serif;font-size:28px;color:var(--gold);margin:.2em 0 .6em}
+.sub{text-transform:uppercase;letter-spacing:.1em;font-weight:800;font-size:13px;opacity:.8}
+.akey .row{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;background:#ffffff0f;margin-bottom:6px}
+.akey .row.done{background:#16a34a40}
+.akey .n{font-family:Anton,Impact,sans-serif;width:1.6em;text-align:center;font-size:1.4em;color:var(--gold)}
+.akey .t{flex:1;font-weight:600}
+.akey .p{font-family:Anton,Impact,sans-serif;font-size:1.3em;min-width:2em;text-align:right}
+.hint{background:#ffffff14;border-left:4px solid var(--gold);padding:10px 12px;border-radius:8px;margin:4px 0 10px;line-height:1.5}
+.small{font-size:13px;opacity:.75}
+label{display:block;font-weight:700;margin:8px 0}
+input,select{font:inherit;padding:.5em .6em;border-radius:8px;border:2px solid #ffffff33;background:var(--deep);color:#fff;width:100%;margin-top:4px}
+table{width:100%;border-collapse:collapse}
+td{padding:6px;vertical-align:middle;border-bottom:1px solid #ffffff14}
+td.q{width:36%;font-size:14px}
+.steps{line-height:1.6;padding-left:1.3em;margin:.3em 0}
+.tag{background:#16a34a;color:#fff;padding:.4em .8em;border-radius:8px;font-weight:800}
+details{margin-top:10px}summary{cursor:pointer;opacity:.8}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="xlayer"></div>
+<script>
+/* =====================================================================
+   QUESTION BANK: edit freely. Point values are used exactly as written
+   (Round 5 values are already doubled).
+   ===================================================================== */
+const GAME = {
+  subtitle: "Beta Club Edition",
+  rounds: [
+    { name: "Round 1", prompt: "Name a classic Thanksgiving side dish.", answers: [
+      ["Mashed Potatoes & Gravy", 35], ["Stuffing / Dressing", 25], ["Mac & Cheese", 18],
+      ["Green Bean Casserole", 10], ["Cranberry Sauce", 7], ["Sweet Potato Casserole / Yams", 5] ] },
+    { name: "Round 2", prompt: "Name something people do on Thanksgiving other than eat.", answers: [
+      ["Watch football", 40], ["Take a nap / Sleep", 25], ["Watch the Macy's Parade", 15],
+      ["Go Black Friday shopping", 12], ["Play board games / cards", 8] ] },
+    { name: "Round 3", prompt: "Name a topic you try to avoid bringing up at the Thanksgiving dinner table.", answers: [
+      ["Politics / Elections", 42], ["Grades / School", 22], ["Dating life / Relationships", 16],
+      ["College or career plans", 12], ["Money / Finances", 8] ] },
+    { name: "Round 4", prompt: "Name something a host always forgets to buy at the grocery store before Thanksgiving.", answers: [
+      ["Whipped cream / Cool Whip", 32], ["Butter", 24], ["Ice", 18],
+      ["Foil / Pans / Tupperware", 14], ["Dinner rolls", 12] ] },
+    { name: "Round 5", double: true, prompt: "Name a word or value associated with Beta Club.", answers: [
+      ["Service", 70], ["Leadership", 50], ["Character", 40], ["Achievement", 30], ["Honor / GPA", 10] ] }
+  ],
+  suddenDeath: { prompt: "Name the #1 most popular Thanksgiving pie.", answer: "Pumpkin Pie" },
+  fastMoney: { goal: 200, bonus: 200, times: [20, 25], questions: [
+    { q: "Name a condiment or topping people put on turkey.", key: [["Gravy",45],["Cranberry sauce",28],["Mayo / Mustard",12],["Butter",8],["Hot sauce / BBQ sauce",7]] },
+    { q: "Name something you'd find at the kids' table.", key: [["Crayons / Coloring books",36],["Plastic cups / Paper plates",24],["Mac & cheese / Nuggets",18],["Cousins / Younger siblings",14],["Messes / Spills",8]] },
+    { q: "Name a word that starts with \"T\" associated with Thanksgiving.", key: [["Turkey",52],["Thankful / Thanksgiving",25],["Travel",10],["Tradition",8],["Table",5]] },
+    { q: "Name a household chore someone has to do after Thanksgiving dinner.", key: [["Wash dishes / Dishwasher",48],["Pack leftovers",24],["Take out the trash",14],["Wipe table / counters",8],["Sweep / Vacuum",6]] },
+    { q: "On a scale of 1 to 10, how full do you feel after Thanksgiving dinner?", key: [["10",55],["9",20],["11 / Over 10",12],["8",8],["7",5]] }
+  ] }
+};
+const PAIRS = [["Team Turkey","Team Stuffing"],["Upperclassmen","Underclassmen"],["Pumpkin Pie","Pecan Pie"]];
+
+/* ===================== State & sync ===================== */
+const KEY = "beta-feud-state-v1";
+const isHost = location.hash === "#host";
+const SKEY = KEY + "-sound-" + (isHost ? "h" : "d");
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const blankFm = () => GAME.fastMoney.questions.map(() => ({ t: "", k: null, shown: false }));
+const fresh = () => ({ teams: [...PAIRS[0]], scores: [0,0], phase: "setup", round: 0, revealed: [], strikes: 0,
+  control: null, banked: false, lastWinner: null, lastAward: 0, champion: null, sdRevealed: false, timer: null,
+  fm: { p: [blankFm(), blankFm()], hideP1: false, bonus: false } });
+
+function load(){ try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.teams && s.round < GAME.rounds.length) return s; } catch(e){} return null; }
+let state = load() || fresh();
+const ch = ("BroadcastChannel" in window) ? new BroadcastChannel("beta-feud") : null;
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} }
+function commit(quiet){ save(); if (ch) ch.postMessage({ kind: "state", state }); if (!quiet) render(); }
+if (ch) {
+  ch.onmessage = e => { const d = e.data; if (d.kind === "state") { state = d.state; render(); } else if (d.kind === "fx") playFx(d.fx, d.n); };
+} else {
+  window.addEventListener("storage", e => { if (e.key === KEY && e.newValue) { try { state = JSON.parse(e.newValue); render(); } catch(_){} } });
+}
+
+/* ===================== Sound & effects ===================== */
+let soundOn = (() => { try { const v = localStorage.getItem(SKEY); return v === null ? true : v === "1"; } catch(e){ return true; } })();
+function setSound(v){ soundOn = v; try { localStorage.setItem(SKEY, v ? "1" : "0"); } catch(e){} }
+let actx = null, audioReady = false;
+function ensureAudio(){ try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume(); } catch(e){} }
+document.addEventListener("pointerdown", () => { ensureAudio(); audioReady = true; const t = $("#toast"); if (t) t.remove(); });
+function tone(freq, dur, type = "sine", vol = .2, when = 0){
+  if (!soundOn) return; ensureAudio(); if (!actx) return;
+  try { const t = actx.currentTime + when, o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t); g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(.001, t + dur); o.connect(g).connect(actx.destination); o.start(t); o.stop(t + dur); } catch(e){}
+}
+function overlay(html){ const l = $("#xlayer"); l.innerHTML = html; l.classList.add("on"); clearTimeout(overlay.t); overlay.t = setTimeout(() => l.classList.remove("on"), 1400); }
+function playFx(name, n){
+  if (name === "ding"){ tone(880,.5,"triangle",.3); tone(1320,.7,"triangle",.25,.12); }
+  if (name === "buzz" || name === "x" || name === "dup"){ tone(110,.8,"sawtooth",.25); tone(117,.8,"square",.1); }
+  if (name === "x") overlay("<span>X</span>".repeat(Math.min(3, n || 1)));
+  if (name === "dup") overlay('<div class="dup">BUZZ!<br>TRY AGAIN!</div>');
+  if (name === "win") [523,659,784,1047,1319].forEach((f,i) => tone(f,.45,"triangle",.22,i*.12));
+}
+function fx(name, n){ playFx(name, n); if (ch) ch.postMessage({ kind: "fx", fx: name, n }); }
+
+/* ===================== Game helpers ===================== */
+const R = () => GAME.rounds[state.round];
+const other = t => 1 - t;
+const tn = t => esc(state.teams[t] || (t ? "Team 2" : "Team 1"));
+const inRound = () => ["faceoff","play","steal","roundover"].includes(state.phase);
+function bank(){ if (state.banked || !R()) return 0; return state.revealed.reduce((a,v,i) => a + (v === "play" ? R().answers[i][1] : 0), 0); }
+const fmPts = (q, c) => c.k >= 0 && c.k !== null ? GAME.fastMoney.questions[q].key[c.k][1] : 0;
+const fmTotal = () => state.fm.p.reduce((a,col) => a + col.reduce((b,c,q) => b + (c.shown ? fmPts(q,c) : 0), 0), 0);
+function resetRound(){ state.revealed = R().answers.map(() => null); state.strikes = 0; state.control = null;
+  state.banked = false; state.lastWinner = null; state.lastAward = 0; state.timer = null; }
+function award(t){ const b = bank(); state.scores[t] += b; state.lastAward = b; state.lastWinner = t;
+  state.banked = true; state.phase = "roundover"; state.timer = null; fx("win"); commit(); }
+
+/* ===================== Actions ===================== */
+const A = {
+  setTeam(i, v){ state.teams[i] = v; commit(true); },
+  pair(i){ state.teams = [...PAIRS[+i]]; commit(); },
+  start(){ state.round = 0; resetRound(); state.phase = "faceoff"; commit(); },
+  reveal(i){
+    i = +i; if (!inRound() || !R() || i < 0 || i >= R().answers.length || state.revealed[i]) return;
+    state.revealed[i] = state.phase === "roundover" ? "show" : "play"; fx("ding");
+    if (state.phase === "steal") return award(other(state.control));
+    if (state.phase === "play" && R().answers.every((_, j) => state.revealed[j])) return award(state.control);
+    commit();
+  },
+  strike(){
+    const ph = state.phase;
+    if (ph === "play"){ state.strikes++; fx("x", state.strikes); if (state.strikes >= 3) state.phase = "steal"; return commit(); }
+    if (ph === "steal") return A.stealFail();
+    if (ph === "faceoff") return fx("x", 1);
+    fx("buzz");
+  },
+  control(t){ state.control = +t; state.phase = "play"; state.strikes = 0; commit(); },
+  award(t){ award(+t); },
+  stealFail(){ if (state.phase !== "steal") return; fx("x", 1); award(state.control); },
+  revealAll(){ R().answers.forEach((_, i) => { if (!state.revealed[i]) state.revealed[i] = "show"; }); fx("ding"); commit(); },
+  next(){
+    if (state.phase !== "roundover") return;
+    if (state.round < GAME.rounds.length - 1){ state.round++; resetRound(); state.phase = "faceoff"; }
+    else { state.timer = null; const [a,b] = state.scores;
+      if (a === b){ state.phase = "suddendeath"; state.sdRevealed = false; }
+      else { state.champion = a > b ? 0 : 1; state.phase = "gameover"; fx("win"); } }
+    commit();
+  },
+  sdWin(t){ state.sdRevealed = true; state.champion = +t; state.phase = "gameover"; fx("ding"); setTimeout(() => fx("win"), 500); commit(); },
+  adj(t, d){ state.scores[+t] = Math.max(0, state.scores[+t] + (+d)); commit(); },
+  timer(sec){ state.timer = { end: Date.now() + sec * 1000 }; commit(); },
+  stopTimer(){ state.timer = null; commit(); },
+  fastMoney(){ state.phase = "fastmoney"; state.fm = { p: [blankFm(), blankFm()], hideP1: false, bonus: false }; state.timer = null; commit(); },
+  fmText(p, q, v){ state.fm.p[p][q].t = v; commit(true); },
+  fmK(p, q, v){ const c = state.fm.p[p][q]; c.k = v === "" ? null : +v;
+    if (c.k >= 0 && c.k !== null && !c.t.trim()) c.t = GAME.fastMoney.questions[q].key[c.k][0]; commit(); },
+  fmShow(p, q){ const c = state.fm.p[+p][+q]; if (c.k === null) return; c.shown = true; fx(fmPts(+q, c) > 0 ? "ding" : "buzz"); commit(); },
+  fmHide(){ state.fm.hideP1 = !state.fm.hideP1; commit(); },
+  dup(){ fx("dup"); },
+  fmBonus(){ if (state.fm.bonus) return; state.scores[state.champion] += GAME.fastMoney.bonus; state.fm.bonus = true; fx("win"); commit(); },
+  backToGame(){ state.phase = "gameover"; state.timer = null; commit(); },
+  reset(){ if (confirm("Reset the whole game? All scores will be cleared.")){ const t = state.teams; state = fresh(); state.teams = t; commit(); } },
+  display(){ window.open(location.href.split("#")[0], "feud-display"); setSound(false); render(); },
+  host(){ window.open(location.href.split("#")[0] + "#host", "feud-host"); },
+  sound(){ setSound(!soundOn); ensureAudio(); render(); },
+  fs(){ if (document.fullscreenElement) document.exitFullscreen(); else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); }
+};
+
+/* ===================== Audience display ===================== */
+const seen = new Set();
+const CONFETTI = Array.from({length: 40}, () => `<span style="left:${Math.random()*100}vw;font-size:${20+Math.random()*30}px;animation-duration:${4+Math.random()*5}s;animation-delay:${-Math.random()*8}s">${["🍂","🦃","🥧","🍁","⭐"][Math.floor(Math.random()*5)]}</span>`).join("");
+
+function scoreRow(){
+  const ph = state.phase, c = state.control;
+  const active = t => (ph === "play" && c === t) || (ph === "steal" && other(c) === t) ||
+    (ph === "roundover" && state.lastWinner === t) || (["gameover","fastmoney"].includes(ph) && state.champion === t);
+  const team = t => `<div class="team ${active(t) ? "active" : ""}"><div class="nm">${tn(t)}</div><div class="sc">${state.scores[t]}</div></div>`;
+  const mid = !inRound() ? `<div class="lbl">Feud</div><div class="bk">🦃</div>`
+    : ph === "roundover" ? `<div class="lbl">Awarded</div><div class="bk">${state.lastAward}</div>`
+    : `<div class="lbl">Round Bank</div><div class="bk">${bank()}</div>`;
+  return `<div class="scorebar">${team(0)}<div class="bankbox">${mid}</div>${team(1)}</div>`;
+}
+function boardHTML(){
+  const r = R(), n = r.answers.length, rows = Math.ceil(n / 2), cells = [];
+  for (let i = 0; i < rows * 2; i++){
+    if (i >= n){ cells.push('<div class="tile empty"><div class="face"></div></div>'); continue; }
+    const v = state.revealed[i];
+    if (!v){ cells.push(`<div class="tile hidden"><div class="face"><div class="num">${i+1}</div></div></div>`); continue; }
+    const id = state.round + ":" + i, flip = !seen.has(id); seen.add(id);
+    cells.push(`<div class="tile shown ${v === "show" ? "dim" : ""} ${flip ? "flip" : ""}"><div class="face"><div class="ans">${esc(r.answers[i][0])}</div><div class="pts">${r.answers[i][1]}</div></div></div>`);
+  }
+  return `<div class="board"><div class="board-inner" style="--rows:${rows}">${cells.join("")}</div></div>`;
+}
+function bannerText(){
+  const c = state.control;
+  switch (state.phase){
+    case "faceoff": return "⚡ FACE-OFF! Hands on the buzzers!";
+    case "play": return `${tn(c)} is playing. No conferring!`;
+    case "steal": return `🚨 STEAL! ${tn(other(c))}, huddle up. ONE answer!`;
+    case "roundover": return state.lastAward > 0 ? `🏆 ${tn(state.lastWinner)} takes ${state.lastAward} points!` : "Round over!";
+  }
+  return "";
+}
+function displayHTML(){
+  const s = state, ph = s.phase;
+  if (ph === "setup") return `<div class="splash"><div class="kicker">${esc(GAME.subtitle)}</div>
+    <div class="logo">THANKSGIVING<br>FAMILY FEUD</div>
+    <div class="vs"><span>${tn(0)}</span><em>vs</em><span>${tn(1)}</span></div>
+    <div class="banner">🦃 We surveyed 100 people… the top answers are on the board!</div></div>`;
+  if (inRound()){ const r = R();
+    return `${scoreRow()}<div class="roundtag">${esc(r.name)}${r.double ? '<span class="dbl">DOUBLE POINTS</span>' : ""}</div>
+      <div class="prompt">“${esc(r.prompt)}”</div>${boardHTML()}
+      <div class="lower"><div class="strikes">${[0,1,2].map(i => `<div class="strike ${i < s.strikes ? "on" : ""}">X</div>`).join("")}</div>
+      <div class="banner">${bannerText()}</div><div id="timer" class="timer"></div></div>`; }
+  if (ph === "suddendeath"){ const sd = GAME.suddenDeath;
+    return `${scoreRow()}<div class="roundtag">⚡ Sudden Death ⚡</div><div class="prompt">“${esc(sd.prompt)}”</div>
+      <div class="board sd"><div class="board-inner" style="--rows:1"><div class="tile hidden"><div class="face"><div class="num">1</div></div></div></div></div>
+      <div class="banner">Captains to the buzzer! Only the #1 answer wins!</div>`; }
+  if (ph === "gameover") return `${scoreRow()}<div class="confetti">${CONFETTI}</div><div class="splash">
+      ${s.sdRevealed ? `<div class="subline">Survey said… ${esc(GAME.suddenDeath.answer).toUpperCase()}! 🥧</div>` : ""}
+      <div class="logo sm">🏆 ${tn(s.champion)} WINS! 🏆</div>
+      <div class="subline">Final score: ${s.scores[0]} – ${s.scores[1]}</div>
+      <div class="banner">💰 Fast Money is next…</div></div>`;
+  if (ph === "fastmoney"){ const fm = s.fm, F = GAME.fastMoney, tot = fmTotal();
+    const col = p => `<h4>PLAYER ${p+1}</h4>` + F.questions.map((_, q) => { const c = fm.p[p][q], on = c.shown && !(p === 0 && fm.hideP1);
+      const id = "fm" + p + q, flip = on && !seen.has(id); if (on) seen.add(id);
+      return `<div class="fmcell ${flip ? "flip" : ""}"><span>${on ? esc(c.t || "—") : ""}</span><span class="fp">${on ? fmPts(q,c) : ""}</span></div>`; }).join("");
+    return `${scoreRow()}<div class="fm"><div class="fmhead"><div class="fmtitle">💰 FAST MONEY 💰</div><div id="timer" class="timer"></div></div>
+      <div class="fmgrid"><div class="fmcol">${col(0)}</div><div class="fmcol">${col(1)}</div></div>
+      <div class="fmtotal">TOTAL <b>${tot}</b> <small>/ ${F.goal}</small></div>
+      ${tot >= F.goal ? `<div class="banner">🎉 ${F.goal}+! ${tn(s.champion)} WINS THE BONUS! 🎉</div>` : ""}</div>${tot >= F.goal ? `<div class="confetti">${CONFETTI}</div>` : ""}`; }
+  return "";
+}
+function renderDisplay(){
+  $("#app").innerHTML = `<div class="display">${displayHTML()}</div>
+    <div class="dtools"><button class="ghost" data-a="host">🎙️ Host controls (H)</button><button class="ghost" data-a="fs">⛶ Full screen (F)</button><button class="ghost" data-a="sound">${soundOn ? "🔊" : "🔇"}</button></div>
+    ${!audioReady && soundOn ? '<div class="toast" id="toast">Click anywhere to turn on sound 🔊</div>' : ""}`;
+}
+
+/* ===================== Host controls ===================== */
+function hostScores(){
+  const strikes = inRound() ? [0,1,2].map(i => i < state.strikes ? "[X]" : "<i>[ ]</i>").join(" ") : "";
+  const mid = `<div class="bankbox"><div class="lbl">Bank</div><div class="bk">${inRound() ? (state.phase === "roundover" ? state.lastAward : bank()) : "—"}</div><div class="hstrk">${strikes}</div></div>`;
+  return `<div class="mini">${[0,1].map(t => `<div class="team"><div class="nm">${tn(t)}</div><div class="sc">${state.scores[t]}</div>
+    <div class="btnrow c"><button class="ghost" data-a="adj" data-x="${t},-5">−5</button><button class="ghost" data-a="adj" data-x="${t},5">+5</button></div></div>`).join(mid)}</div>`;
+}
+function hostSetup(){
+  return `<div class="cols"><div class="panel"><h2>Team names</h2>
+    <label>Team 1<input data-team="0" value="${esc(state.teams[0])}"></label>
+    <label>Team 2<input data-team="1" value="${esc(state.teams[1])}"></label>
+    <div class="btnrow">${PAIRS.map((p,i) => `<button class="ghost" data-a="pair" data-x="${i}">${esc(p[0])} vs ${esc(p[1])}</button>`).join("")}</div>
+    <div class="btnrow"><button class="big" data-a="start">🦃 Start Round 1</button></div></div>
+    <div class="panel"><h2>Before you start</h2><ol class="steps">
+      <li>Click <b>📺 Open audience screen</b> and drag that window onto the projector. Press <b>F</b> on it for full screen.</li>
+      <li>Click once anywhere on the audience screen so the browser allows sound.</li>
+      <li>Keep <b>this</b> window on your laptop. It shows the answers, so don't project it.</li>
+      <li>Both windows must be in the same browser on the same computer to stay in sync.</li></ol></div></div>`;
+}
+function hostRound(){
+  const r = R(), ph = state.phase, c = state.control;
+  const key = r.answers.map(([a,p], i) => { const v = state.revealed[i];
+    return `<div class="row ${v ? "done" : ""}"><span class="n">${i+1}</span><span class="t">${esc(a)}</span><span class="p">${p}</span>
+      <button data-a="reveal" data-x="${i}" ${v ? "disabled" : ""}>${v ? "✓ Shown" : "Reveal"}</button></div>`; }).join("");
+  let guide = "", btns = "";
+  if (ph === "faceoff"){
+    guide = `<b>Face-off.</b> Read the prompt aloud. One player from each team buzzes in. If the answer is on the board, click it; if not, press <b>✕ Miss</b>. A #1 answer wins control right away. Otherwise the higher-ranked answer wins (if nobody hits the board, keep alternating). Then ask the winners: <b>Play or Pass?</b> and pick the team that will play.`;
+    btns = `<button class="red big" data-a="strike">✕ Miss</button><button class="blue big" data-a="control" data-x="0">🎮 ${tn(0)} plays</button><button class="blue big" data-a="control" data-x="1">🎮 ${tn(1)} plays</button>`;
+  } else if (ph === "play"){
+    guide = `<b>${tn(c)} is playing.</b> Go down the line one player at a time. No conferring! Accept close synonyms. A wrong answer is a strike.`;
+    btns = `<button class="red big" data-a="strike">✕ Strike (${state.strikes}/3)</button>`;
+  } else if (ph === "steal"){
+    guide = `<b>3 strikes!</b> ${tn(other(c))} gets a 10-second huddle and ONE answer. If it's on the board, click it in the answer list and they steal the whole bank. If not, press <b>Steal missed</b>.`;
+    btns = `<button class="big" data-a="timer" data-x="10">⏱ Start 10s huddle</button><button class="red big" data-a="stealFail">✕ Steal missed → ${tn(c)} keeps ${bank()}</button>`;
+  } else {
+    const last = state.round === GAME.rounds.length - 1;
+    guide = `<b>${tn(state.lastWinner)}</b> banked <b>${state.lastAward}</b> points. Reveal the rest for fun, then move on.`;
+    btns = `<button class="ghost big" data-a="revealAll">👀 Reveal remaining</button><button class="big" data-a="next">${last ? "🏁 Final results" : "Next round ▶"}</button>`;
+  }
+  const overrides = ph !== "roundover" ? `<details><summary>Overrides</summary><div class="btnrow">
+    <button class="ghost" data-a="award" data-x="0">Give bank to ${tn(0)}</button><button class="ghost" data-a="award" data-x="1">Give bank to ${tn(1)}</button></div></details>` : "";
+  return `<div class="cols"><div class="panel"><div class="sub">${esc(r.name)} of ${GAME.rounds.length}${r.double ? " · DOUBLE POINTS (already doubled)" : ""}</div>
+    <div class="hprompt">“${esc(r.prompt)}”</div><div class="akey">${key}</div>
+    <p class="small">Shortcut keys: 1–${r.answers.length} reveal · X strike/miss</p></div>
+    <div class="panel"><div class="hint">${guide}</div><div class="btnrow">${btns}</div>${overrides}<div id="timer" class="timer small"></div></div></div>`;
+}
+function hostSudden(){ const sd = GAME.suddenDeath;
+  return `<div class="panel"><h2>⚡ Sudden Death: it's a tie!</h2>
+    <div class="hint">Bring one captain from each team to the buzzer and read: <b>“${esc(sd.prompt)}”</b><br>Only <b>${esc(sd.answer)}</b> wins. Pecan, apple, and everything else get a buzz. Keep going until someone says it!</div>
+    <div class="btnrow"><button class="red big" data-a="strike">✕ Wrong</button><button class="big" data-a="sdWin" data-x="0">${tn(0)} said it!</button><button class="big" data-a="sdWin" data-x="1">${tn(1)} said it!</button></div></div>`;
+}
+function hostGameover(){
+  return `<div class="panel"><h2>🏆 ${tn(state.champion)} wins the Feud!</h2><p>Final score: ${tn(0)} ${state.scores[0]} · ${tn(1)} ${state.scores[1]}</p>
+    <div class="hint">Fast Money: ${tn(state.champion)} picks two players for a <b>${GAME.fastMoney.bonus}-point bonus</b> and bragging rights.</div>
+    <button class="big" data-a="fastMoney">💰 Start Fast Money</button></div>`;
+}
+function hostFm(){
+  const fm = state.fm, F = GAME.fastMoney, tot = fmTotal();
+  const table = p => `<div class="panel"><div class="btnrow between"><h2>Player ${p+1}</h2><button data-a="timer" data-x="${F.times[p]}">⏱ Start ${F.times[p]}s timer</button></div>
+    <table>${F.questions.map((Q, q) => { const c = fm.p[p][q];
+      return `<tr><td class="q"><b>${q+1}.</b> ${esc(Q.q)}</td><td><input data-fm="${p},${q}" value="${esc(c.t)}" placeholder="Their answer"></td>
+        <td><select data-fmk="${p},${q}"><option value="">Match to…</option>${Q.key.map(([a,v],k) => `<option value="${k}" ${c.k === k ? "selected" : ""}>${esc(a)} (${v})</option>`).join("")}
+        <option value="-1" ${c.k === -1 ? "selected" : ""}>Not on board (0)</option></select></td>
+        <td><button data-a="fmShow" data-x="${p},${q}" ${c.shown || c.k === null ? "disabled" : ""}>${c.shown ? "✓" : "Reveal"}</button></td></tr>`; }).join("")}</table></div>`;
+  return `<div class="panel"><h2>💰 Fast Money for ${tn(state.champion)}: total ${tot} / ${F.goal}</h2><ol class="steps">
+    <li>Send Player 2 out of the room (or put on headphones).</li>
+    <li>Start Player 1's ${F.times[0]}s timer and read all 5 questions rapid-fire. Type answers as they go. "Pass" is allowed; come back if time permits.</li>
+    <li>Match each answer to the secret key, then reveal them one by one.</li>
+    <li>Click <b>Hide Player 1</b>, bring Player 2 back, start their ${F.times[1]}s timer. If they repeat Player 1's answer, hit <b>BUZZ!</b></li>
+    <li>Show Player 1 again and reveal Player 2. ${F.goal}+ points wins the bonus!</li></ol>
+    <div class="btnrow"><button class="ghost" data-a="fmHide">${fm.hideP1 ? "👁 Show Player 1 on screen" : "🙈 Hide Player 1 on screen"}</button>
+      <button class="red" data-a="dup">BUZZ! Duplicate, try again</button><button class="ghost" data-a="stopTimer">⏹ Stop timer</button>
+      ${tot >= F.goal && !fm.bonus ? `<button data-a="fmBonus">🎉 Award +${F.bonus} to ${tn(state.champion)}</button>` : ""}
+      ${fm.bonus ? '<span class="tag">Bonus awarded ✓</span>' : ""}
+      <button class="ghost" data-a="backToGame">← Results screen</button></div>
+    <div id="timer" class="timer small"></div></div>${table(0)}${table(1)}`;
+}
+function renderHost(){
+  const ph = state.phase;
+  const body = ph === "setup" ? hostSetup() : inRound() ? hostRound() : ph === "suddendeath" ? hostSudden()
+    : ph === "gameover" ? hostGameover() : ph === "fastmoney" ? hostFm() : "";
+  $("#app").innerHTML = `<div class="host"><div class="hbar"><b>🎙️ Host Controls: Thanksgiving Family Feud</b>
+    <div class="btnrow"><button data-a="display">📺 Open audience screen</button><button class="ghost" data-a="sound">${soundOn ? "🔊 Sound on" : "🔇 Sound off"}</button><button class="ghost" data-a="reset">↺ Reset game</button></div></div>
+    ${ph !== "setup" ? hostScores() : ""}${body}</div>`;
+}
+function render(){ isHost ? renderHost() : renderDisplay(); }
+
+/* ===================== Events ===================== */
+document.addEventListener("click", e => { const b = e.target.closest("[data-a]"); if (!b || b.disabled) return;
+  const args = (b.dataset.x ?? "").split(",").filter(x => x !== ""); if (A[b.dataset.a]) A[b.dataset.a](...args); });
+document.addEventListener("input", e => { const el = e.target;
+  if (el.dataset.team !== undefined) A.setTeam(+el.dataset.team, el.value);
+  if (el.dataset.fm){ const [p,q] = el.dataset.fm.split(","); A.fmText(+p, +q, el.value); } });
+document.addEventListener("change", e => { const el = e.target;
+  if (el.dataset.fmk){ const [p,q] = el.dataset.fmk.split(","); A.fmK(+p, +q, el.value); }
+  if (el.dataset.team !== undefined) render(); });
+document.addEventListener("keydown", e => {
+  if (e.target.matches("input,select,textarea") || e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (/^[1-9]$/.test(k)) A.reveal(+k - 1);
+  else if (k === "x") A.strike();
+  else if (k === "f" && !isHost) A.fs();
+  else if (k === "h" && !isHost) A.host();
+});
+window.addEventListener("hashchange", () => location.reload());
+
+/* Countdown ticker: each window updates its own timer display */
+let lastEnd = state.timer && state.timer.end < Date.now() ? state.timer.end : null;
+setInterval(() => {
+  const el = document.getElementById("timer"), t = state.timer;
+  if (!t){ if (el) el.textContent = ""; return; }
+  const rem = Math.max(0, Math.ceil((t.end - Date.now()) / 1000));
+  if (el){ el.textContent = rem === 0 ? "TIME!" : rem; el.classList.toggle("low", rem <= 5); }
+  if (rem === 0 && lastEnd !== t.end){ lastEnd = t.end; playFx("buzz"); }
+}, 200);
+
+render();
+</script>
+</body>
+</html>
